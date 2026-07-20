@@ -2,13 +2,13 @@ import streamlit as st
 import re
 import os
 
-# --- 페이지 기본 설정 ---
-st.set_page_config(page_title=" 로또 스캐너", page_icon="🔍", layout="centered")
+# --- 1. 페이지 기본 설정 ---
+st.set_page_config(page_title="로또 스캐너", page_icon="🔍", layout="centered")
 
-st.title("🔍 로또 스캐너 (지능형 대량 스캔 + 저장)")
-st.markdown("번호를 한 번 저장해 두면 다음번에 열어도 그대로 남아있어요!")
+st.title("🔍 로또 스캐너")
+st.markdown("매주 **이번 주 세트 번호만 한 번 넣어두면 자동으로 저장**됩니다! 내 번호는 스캔할 때마다 자유롭게 새로 넣어주세요.")
 
-# --- 💡 파일 저장/보관을 위한 핵심 함수 ---
+# --- 💡 파일 저장/보관을 위한 핵심 함수 (세트 번호 전용) ---
 def load_saved_data(filename, default_text):
     if os.path.exists(filename):
         with open(filename, "r", encoding="utf-8") as f:
@@ -19,9 +19,12 @@ def save_data(filename, text):
     with open(filename, "w", encoding="utf-8") as f:
         f.write(text)
 
-# --- 1단계: 이번 주 세트 입력 칸 ---
-st.header("📝 1단계: 이번 주 24수 세트 입력")
+# 세트 번호 자동 저장 콜백 함수 (버튼 없이 자동 저장)
+def save_sets_callback():
+    save_data("saved_sets.txt", st.session_state.sets_input_key)
 
+# --- 2. 1단계: 이번 주 세트 입력 칸 (자동 저장 O) ---
+st.header("📝 1단계: 이번 주 24수 세트 입력")
 default_sets = """A 1 2 4 6 7 9 10 11 15 20 21 23 25 31 32 33 34 36 37 38 39 40 44 45
 B 1 3 4 5 6 7 10 11 13 14 16 17 19 20 21 25 27 30 31 32 35 42 44 45
 C 1 3 4 6 7 8 10 12 14 18 20 21 22 24 25 26 28 29 31 32 41 43 44 45
@@ -35,12 +38,8 @@ J 5 6 7 9 10 11 13 14 19 22 23 25 26 27 29 30 31 32 34 36 40 41 43 44"""
 
 # 저장된 세트 불러오기
 saved_sets = load_saved_data("saved_sets.txt", default_sets)
-sets_input = st.text_area("▼ 10개 세트(A~J) 번호 목록", value=saved_sets, height=180)
-
-# 세트 저장 버튼
-if st.button("💾 이번 주 세트 번호 기억하기"):
-    save_data("saved_sets.txt", sets_input)
-    st.success("✅ 세트 번호가 서버에 저장되었습니다! 다음번에도 이 번호로 시작합니다.")
+# on_change 속성으로 타이핑/수정 후 칸 밖을 누르면 즉시 자동 저장됨
+sets_input = st.text_area("▼ 10개 세트(A~J) 번호 목록 (자동 저장됨)", value=saved_sets, height=180, key="sets_input_key", on_change=save_sets_callback)
 
 parsed_sets = {}
 if sets_input:
@@ -53,28 +52,21 @@ if sets_input:
         if numbers:
             parsed_sets[set_name] = numbers
 
-# --- 2단계: 내 번호 대량 스캔 칸 ---
+# --- 3. 2단계: 내 번호 대량 스캔 칸 (저장 기능 X, 매번 새로 입력) ---
 st.markdown("---")
 st.header("🔍 2단계: 내 번호 대량 스캔하기")
 
-# 저장된 내 번호 데이터 불러오기
-default_bulk = "010204060709111520212325\n7 10 15 25 38 44 / 030407101113"
-saved_bulk = load_saved_data("saved_bulk.txt", default_bulk)
-
-#  파일 업로드 기능 추가 (폰에 txt 파일이 있을 경우)
+# 파일 업로드 기능 (폰에 텍스트 파일이 있을 때만 사용, 자동 저장 안 함)
 uploaded_file = st.file_uploader("📂 로또 번호 메모장 파일(.txt)이 있다면 여기에 올려주세요", type=["txt"])
+
+default_bulk_text = "010204060709111520212325\n7 10 15 25 38 44 / 030407101113"
 if uploaded_file is not None:
-    saved_bulk = uploaded_file.read().decode("utf-8")
+    default_bulk_text = uploaded_file.read().decode("utf-8")
     st.info("✅ 메모장 파일에서 번호를 성공적으로 읽어왔습니다!")
 
-bulk_input = st.text_area("✏️ 번호 묶음 입력칸", value=saved_bulk, height=220)
+bulk_input = st.text_area("✏️ 번호 묶음 입력칸 (스캔할 번호를 자유롭게 넣으세요)", value=default_bulk_text, height=220)
 
-# 내 번호 저장 버튼
-if st.button("💾 이 번호 묶음 기억하기"):
-    save_data("saved_bulk.txt", bulk_input)
-    st.success("✅ 번호 묶음이 서버에 저장되었습니다! 이제 주중에는 안 지워져요.")
-
-# --- 3단계: 스캔 가동 ---
+# --- 4. 3단계: 스캔 및 파싱 가동 ---
 st.markdown("---")
 if st.button("🚀 조합 일괄 스캔 시작!", use_container_width=True):
     if not parsed_sets:
@@ -88,9 +80,11 @@ if st.button("🚀 조합 일괄 스캔 시작!", use_container_width=True):
         
         all_numbers = []
         for token in raw_tokens:
+            # 4글자 이상 연속된 숫자는 2자리씩 분리
             if len(token) >= 4 and token.isdigit():
                 chunks = [int(token[i:i+2]) for i in range(0, len(token), 2) if i+1 < len(token)]
                 all_numbers.extend(chunks)
+            # 일반 숫자/기호로 분리된 숫자는 그대로 추가
             elif token.isdigit():
                 all_numbers.append(int(token))
                 
@@ -120,6 +114,7 @@ if st.button("🚀 조합 일괄 스캔 시작!", use_container_width=True):
                         "matched": sorted(list(intersection))
                     })
                 
+                # 최고 성적 추출
                 best_matches = sorted(best_matches, key=lambda x: x["count"], reverse=True)
                 top_match = best_matches[0]
                 results_to_show.append((game_num, my_numbers, top_match))
@@ -142,4 +137,4 @@ if st.button("🚀 조합 일괄 스캔 시작!", use_container_width=True):
                     st.write(f" [게임 {game_num}] {my_nums_str} 👉 최고 {count}개 일치 ({set_name}세트)")
 
 st.markdown("---")
-st.caption("만든이: 전민규 (자동 데이터 저장 및 로드 기능 추가 완료)")
+st.caption("만든이: 전민규 (세트만 자동 저장 기능 탑재 완료)")

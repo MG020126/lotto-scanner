@@ -6,7 +6,7 @@ import os
 st.set_page_config(page_title="로또 종합 스캐너", page_icon="🔍", layout="centered")
 
 st.title("🔍 로또 종합 스캐너")
-st.markdown("상단의 **탭(Tab)**을 눌러 원하는 기능을 선택하세요. (기본 세트/패턴은 자동 저장됩니다!)")
+st.markdown("상단의 탭(Tab)을 눌러 원하는 기능을 선택하세요. (기본 세트/패턴은 자동 저장됩니다!)")
 
 # --- 공통: 파일 저장/보관 함수 ---
 def load_saved_data(filename, default_text):
@@ -42,7 +42,7 @@ def extract_lotto_numbers(text):
     return sorted(list({n for n in all_nums if 1 <= n <= 45}))
 
 # --- 상단 탭(Tab) 나누기 ---
-tab1, tab2 = st.tabs(["🎰 1. 당첨 조합 대량 스캐너 (기존)", "📊 2. 패턴 겹침 분석기 (신규)"])
+tab1, tab2 = st.tabs([" 1. 당첨 조합 대량 스캐너 (기존)", "📊 2. 패턴 겹침 분석기 (신규)"])
 
 # ==============================================================================
 # [탭 1] 기존 기능: 이번 주 24수 세트 vs 내 로또 조합(6수) 당첨 채점
@@ -118,9 +118,9 @@ J 5 6 7 9 10 11 13 14 19 22 23 25 26 27 29 30 31 32 34 36 40 41 43 44"""
                     matched_str = ", ".join(f"{n:02d}" for n in top["matched"])
                     
                     if top["count"] == 6: st.error(f"🏆 [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 6개 올적중!!!")
-                    elif top["count"] == 5: st.success(f"🔥 [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 5개 일치! ({matched_str})")
-                    elif top["count"] == 4: st.info(f"✨ [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 4개 일치 ({matched_str})")
-                    elif top["count"] == 3: st.warning(f"🔹 [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 3개 일치")
+                    elif top["count"] == 5: st.success(f" [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 5개 일치! ({matched_str})")
+                    elif top["count"] == 4: st.info(f" [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 4개 일치 ({matched_str})")
+                    elif top["count"] == 3: st.warning(f" [게임 {game_num}] {my_nums_str} 👉 {top['set']}세트 3개 일치")
                     else: st.write(f"⚪ [게임 {game_num}] {my_nums_str} 👉 최고 {top['count']}개 일치 ({top['set']}세트)")
 
 # ==============================================================================
@@ -197,7 +197,7 @@ P10 5 6 7 9 10 11 13 14 19 22 23 25 26 27 29 30 31 32 34 36 40 41 43 44"""
                 analysis_results = sorted(analysis_results, key=lambda x: x["overlap_count"], reverse=True)
                 
                 st.subheader("🏆 [결론] 패턴별 겹친 숫자 순위 리포트")
-                st.write("2번 박스 번호와 **가장 많이 겹친 패턴부터 순서대로** 보여드립니다.")
+                st.write("2번 박스 번호와 가장 많이 겹친 패턴부터 순서대로 보여드립니다.")
                 
                 for rank, res in enumerate(analysis_results, 1):
                     label = res["label"]
@@ -206,16 +206,16 @@ P10 5 6 7 9 10 11 13 14 19 22 23 25 26 27 29 30 31 32 34 36 40 41 43 44"""
                     overlap_str = ", ".join(f"{n:02d}" for n in res["overlap_nums"]) if res["overlap_nums"] else "겹친 수 없음"
                     
                     if overlap_count >= 15:
-                        st.error(f"**{rank}위. [{label}]** 👉 **총 {overlap_count}수 겹침!** (패턴 총 {total_p_count}수 중)\n\n"
-                                 f"🔹 **겹친 번호:** {overlap_str}")
+                        st.error(f"{rank}위. [{label}] 👉 총 {overlap_count}수 겹침! (패턴 총 {total_p_count}수 중)\n\n"
+                                 f"🔹 겹친 번호: {overlap_str}")
                     elif overlap_count >= 10:
-                        st.success(f"**{rank}위. [{label}]** 👉 **총 {overlap_count}수 겹침!** (패턴 총 {total_p_count}수 중)\n\n"
-                                   f"🔹 **겹친 번호:** {overlap_str}")
+                        st.success(f"{rank}위. [{label}] 👉 총 {overlap_count}수 겹침! (패턴 총 {total_p_count}수 중)\n\n"
+                                   f"🔹 겹친 번호: {overlap_str}")
                     elif overlap_count >= 5:
-                        st.info(f"**{rank}위. [{label}]** 👉 **총 {overlap_count}수 겹침!** (패턴 총 {total_p_count}수 중)\n\n"
-                                f"🔹 **겹친 번호:** {overlap_str}")
+                        st.info(f"{rank}위. [{label}] 👉 총 {overlap_count}수 겹침! (패턴 총 {total_p_count}수 중)\n\n"
+                                f"🔹 겹친 번호: {overlap_str}")
                     else:
-                        st.write(f"**{rank}위. [{label}]** 👉 **총 {overlap_count}수 겹침** (패턴 총 {total_p_count}수 중) | 겹친 수: {overlap_str}")
+                        st.write(f"{rank}위. [{label}] 👉 총 {overlap_count}수 겹침 (패턴 총 {total_p_count}수 중) | 겹친 수: {overlap_str}")
 
 st.markdown("---")
 st.caption("만든이: 전민규 (기존 6수 당첨 스캐너 + 신규 30패턴 겹침 분석기 상단 탭 통합 완성)")
